@@ -67,15 +67,11 @@ def main(args):
             for i in range(len(images)):
                 image_path = val_dataset.imgs[i][0]
                 true_class = val_dataset.classes[labels[i].item()]
-                predictions = []
-                for j in range(5):
-                    predictions.append({
-                        "image_path": image_path,
-                        "true_class": true_class,
-                        f"top{j+1}_prediction_class": val_dataset.classes[top5_classes[i, j].item()],
-                        f"top{j+1}_confidence": top5_prob[i, j].item(),
-                    })
-                results.extend(predictions)
+                predictions = {"image_path": image_path, "true_class": true_class}
+                for j in range(5):                       
+                    predictions[f"top{j+1}_prediction_class"] = val_dataset.classes[top5_classes[i, j].item()]
+                    predictions[f"top{j+1}_confidence"] = top5_prob[i, j].item()
+                results.append(predictions)
 
     # Convert results to DataFrame and save to CSV
     results_df = pd.DataFrame(results)
