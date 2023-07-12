@@ -55,6 +55,10 @@ def main(args):
     elif model_name == 'resnet50_V2':
         resize_im = 232
         model = models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V2).to(device)
+    elif model_name == 'resnet101_V1':
+        resize_im = 256
+        model = models.resnet101(weights=models.ResNet101_Weights.IMAGENET1K_V1).to(device)
+        
     model.eval()
 
     # Define transformations for the input images
@@ -132,7 +136,7 @@ if __name__ == '__main__':
     parser.add_argument('--val_dir', default='/datasets/ImageNet/val', type=str, help='Path to ImageNet validation dataset')
     parser.add_argument('--base_exp_dir', default='/home/lamitay/experiments/', type=str, help='Path to ImageNet validation dataset')
     parser.add_argument('--exp_name', default='predict_imagenet', type=str, help='Experiment name')
-    parser.add_argument('--model_name', default='resnet50_V2', type=str, help='Model name')
+    parser.add_argument('--model_name', default='resnet101_V1', type=str, help='Model name')
 
     args = parser.parse_args()
 

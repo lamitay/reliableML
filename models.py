@@ -14,8 +14,6 @@ def load_model(model_name):
         return models.resnet152(pretrained=True)
     if model_name == 'resnet50':
         return models.resnet50(pretrained=True)
-    if model_name == 'resnet50':
-        return models.resnet50(pretrained=True)
     elif model_name == 'vgg16':
         return models.vgg16(pretrained=True)
     elif model_name == 'vgg19':
