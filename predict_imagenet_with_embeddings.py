@@ -183,7 +183,7 @@ def main(args):
 
     # Plot with Plotly
     fig = px.scatter(df_embeddings, x='Dim1', y='Dim2', color='true_class', hover_data=['predicted_class', 'image_path'])
-    fig.update_traces(marker={'size': 1})
+    fig.update_traces(marker={'size': 2})
     # fig.show()
 
     # Save plot as PNG
