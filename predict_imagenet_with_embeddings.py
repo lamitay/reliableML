@@ -29,6 +29,19 @@ def load_imagenet_labels():
         imagenet_labels = json.loads(url.read().decode())
     return imagenet_labels
 
+# Register hook to capture embeddings
+def get_embedding_hook(module, input, output, embed_dir):
+    """
+    Hook function to capture and save the model's embeddings. 
+
+    Args:
+        module (nn.Module): The module where the hook is registered.
+        input (Tensor): The input to the module.
+        output (Tensor): The output of the module.
+
+    """
+    output = output.detach().cpu().numpy()
+    np.save(os.path.join(embed_dir, f"{i}_embeddings.npy"), output)
 
 
 
@@ -49,15 +62,20 @@ def main(args):
 
     exp_dir = os.path.join(base_exp_dir, exp_name)
     results_dir = os.path.join(exp_dir, 'results')
+    embed_dir = os.path.join(results_dir, 'val_embeddings')
 
     # Create experiment directory
     os.makedirs(exp_dir, exist_ok=True)
     os.makedirs(results_dir, exist_ok=True)
+    os.makedirs(embed_dir, exist_ok=True)
+
 
     # Update according to model name
     if model_name == 'resnet50_V1':
         resize_im = 256
         model = models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V1).to(device)
+        # Register the hook at the avgpool layer of the model
+        model.avgpool.register_forward_hook(get_embedding_hook(embed_dir=embed_dir))
     elif model_name == 'resnet50_V2':
         resize_im = 232
         model = models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V2).to(device)
@@ -104,7 +122,9 @@ def main(args):
                 image_path = val_dataset.imgs[i][0]
                 # true_class = val_dataset.classes[labels[i].item()]
                 true_class = imagenet_labels[labels[i].item()]
-                predictions = {"image_path": image_path, "true_class": true_class}
+                predictions = {"image_path": image_path, 
+                               "embeddings_path":  os.path.join(embed_dir, f"{i}_embeddings.npy"),
+                               "true_class": true_class}
                 for j in range(5):                       
                     # predictions[f"top{j+1}_prediction_class"] = val_dataset.classes[top5_classes[i, j].item()]
                     prediction_class = imagenet_labels[top5_classes[i, j].item()]
@@ -114,6 +134,7 @@ def main(args):
                     # Check if top-1 prediction is correct
                     if j == 0 and prediction_class == true_class:
                         total_correct += 1
+                
 
                 results.append(predictions)
 
@@ -135,6 +156,29 @@ def main(args):
     })
     confidence_df.to_csv(os.path.join(results_dir, f"val_confidence_summary_{exp_base_name}.csv"), index=False)
 
+    # Handle embeddings
+    embeddings = np.array([np.load(file) for file in results_df['embeddings_path']])
+    tsne = TSNE(n_components=2, random_state=0)
+    embeddings_2d = tsne.fit_transform(embeddings)
+
+    # Create a new DataFrame for embeddings
+    df_embeddings = pd.DataFrame(embeddings_2d, columns=['Dim1', 'Dim2'])
+    df_embeddings['true_class'] = results_df['true_class']
+    df_embeddings['predicted_class'] = results_df['top1_prediction_class']
+    df_embeddings['image_path'] = results_df['image_path']
+
+    # Save as CSV
+    df_embeddings.to_csv(os.path.join(results_dir, f"val_embeddings_2d_{exp_base_name}.csv"), index=False)
+
+    # Plot with Plotly
+    fig = px.scatter(df_embeddings, x='Dim1', y='Dim2', color='true_class', hover_data=['predicted_class', 'image_path'])
+    fig.show()
+
+    # Save plot as PNG
+    fig.write_image(os.path.join(results_dir, f"tSNE_embeddings_{exp_base_name}.png"))
+
+    # Save plot as HTML
+    pio.write_html(fig, os.path.join(results_dir, f"tSNE_embeddings_{exp_base_name}.html"))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="ImageNet Validation Set Prediction")
@@ -142,7 +186,7 @@ if __name__ == '__main__':
     parser.add_argument('--val_dir', default='/datasets/ImageNet/val', type=str, help='Path to ImageNet validation dataset')
     parser.add_argument('--base_exp_dir', default='/home/lamitay/experiments/', type=str, help='Path to ImageNet validation dataset')
     parser.add_argument('--exp_name', default='predict_imagenet', type=str, help='Experiment name')
-    parser.add_argument('--model_name', default='resnet101_V1', type=str, help='Model name')
+    parser.add_argument('--model_name', default='resnet50_V1', type=str, help='Model name')
 
     args = parser.parse_args()
 
