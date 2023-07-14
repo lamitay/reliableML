@@ -29,24 +29,24 @@ def load_imagenet_labels():
         imagenet_labels = json.loads(url.read().decode())
     return imagenet_labels
 
-# Register hook to capture embeddings
-def get_embedding_hook(module, input, output, embed_dir):
+# Register hook to capture the model's embeddings
+def get_embedding_hook(batch_idx, batch_size, embed_dir):
     """
-    Hook function to capture and save the model's embeddings. 
+    Creates and returns a hook function to capture and save the model's embeddings.
 
-    Args:
-        module (nn.Module): The module where the hook is registered.
-        input (Tensor): The input to the module.
-        output (Tensor): The output of the module.
-
+    Returns:
+        function: A hook function that can be registered to a PyTorch nn.Module.
     """
-    output = output.detach().cpu().numpy()
-    np.save(os.path.join(embed_dir, f"{i}_embeddings.npy"), output)
+    def hook(module, input, output):
+        output = output.detach().cpu().numpy()
+        for i in range(output.shape[0]):
+            # Calculate the overall index of the image in the dataset
+            image_idx = batch_idx * batch_size + i
+            np.save(os.path.join(embed_dir, f"{image_idx}_embeddings.npy"), output[i])
+    return hook
 
 
-
-def main(args):
-    
+def main(args):  
     # Define device, batch size and directory path for ImageNet validation set
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     
@@ -75,7 +75,8 @@ def main(args):
         resize_im = 256
         model = models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V1).to(device)
         # Register the hook at the avgpool layer of the model
-        model.avgpool.register_forward_hook(get_embedding_hook(embed_dir=embed_dir))
+        layer = model.avgpool
+        
     elif model_name == 'resnet50_V2':
         resize_im = 232
         model = models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V2).to(device)
@@ -95,7 +96,7 @@ def main(args):
 
     # Load the ImageNet validation dataset with defined transformations
     val_dataset = ImageFolder(val_dir, transform=transform)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=4)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=6)
 
     # Load imagenet labels as real classes
     imagenet_labels = load_imagenet_labels()
@@ -106,9 +107,11 @@ def main(args):
 
     # Disable gradients for faster inference
     with torch.no_grad():
-        for images, labels in tqdm(val_loader, desc=f"Processing {exp_name}"):
+        for batch_idx, (images, labels) in enumerate(tqdm(val_loader, desc=f"Processing {exp_name}")):
             images = images.to(device)
             labels = labels.to(device)
+
+            handle = layer.register_forward_hook(get_embedding_hook(batch_idx, batch_size, embed_dir))
 
             # Run forward pass through the model and calculate probabilities
             output = model(images)
@@ -119,24 +122,26 @@ def main(args):
 
             # Iterate over each image in the batch
             for i in range(len(images)):
-                image_path = val_dataset.imgs[i][0]
-                # true_class = val_dataset.classes[labels[i].item()]
+                # Calculate the overall index of the image in the dataset
+                image_idx = batch_idx * batch_size + i
+                image_path = val_dataset.imgs[image_idx][0]
                 true_class = imagenet_labels[labels[i].item()]
                 predictions = {"image_path": image_path, 
-                               "embeddings_path":  os.path.join(embed_dir, f"{i}_embeddings.npy"),
-                               "true_class": true_class}
+                            "embeddings_path":  os.path.join(embed_dir, f"{image_idx}_embeddings.npy"),
+                            "true_class": true_class}
+                
                 for j in range(5):                       
-                    # predictions[f"top{j+1}_prediction_class"] = val_dataset.classes[top5_classes[i, j].item()]
                     prediction_class = imagenet_labels[top5_classes[i, j].item()]
                     predictions[f"top{j+1}_prediction_class"] = prediction_class
                     predictions[f"top{j+1}_confidence"] = top5_prob[i, j].item()
 
                     # Check if top-1 prediction is correct
                     if j == 0 and prediction_class == true_class:
-                        total_correct += 1
-                
+                        total_correct += 1 
 
                 results.append(predictions)
+
+            handle.remove()  # Unregister the hook after processing the batch
 
     # Convert results to DataFrame and save to CSV
     results_df = pd.DataFrame(results)
@@ -159,6 +164,12 @@ def main(args):
     # Handle embeddings
     embeddings = np.array([np.load(file) for file in results_df['embeddings_path']])
     tsne = TSNE(n_components=2, random_state=0)
+
+    np.save(os.path.join(results_dir, 'tot_embeddings_4D_np_array.npy'), embeddings)
+
+    # assuming embeddings is a 4D numpy array
+    embeddings = embeddings.reshape(embeddings.shape[0], -1)
+    
     embeddings_2d = tsne.fit_transform(embeddings)
 
     # Create a new DataFrame for embeddings
