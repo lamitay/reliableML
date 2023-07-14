@@ -183,13 +183,14 @@ def main(args):
 
     # Plot with Plotly
     fig = px.scatter(df_embeddings, x='Dim1', y='Dim2', color='true_class', hover_data=['predicted_class', 'image_path'])
-    fig.show()
+    fig.update_traces(marker={'size': 1})
+    # fig.show()
 
     # Save plot as PNG
-    fig.write_image(os.path.join(results_dir, f"tSNE_embeddings_{exp_base_name}.png"))
+    fig.write_image(os.path.join(results_dir, f"tSNE_embeddings_scatter_{exp_base_name}.png"))
 
     # Save plot as HTML
-    pio.write_html(fig, os.path.join(results_dir, f"tSNE_embeddings_{exp_base_name}.html"))
+    pio.write_html(fig, os.path.join(results_dir, f"tSNE_embeddings_scatter_{exp_base_name}.html"))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="ImageNet Validation Set Prediction")
