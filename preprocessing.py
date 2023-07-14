@@ -1,4 +1,4 @@
-from torchvision.transforms import Compose, Resize, ToTensor, Normalize
+from torchvision.transforms import Compose, Resize, ToTensor, Normalize, CenterCrop
 
 # Define a function for preprocessing images for CIFAR-100 and Tiny ImageNet
 def preprocess_images_cifar_tinyimagenet():
@@ -18,4 +18,19 @@ def preprocess_images_stl_caltech():
         ToTensor(),
         Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))  # Normalize to range [-1, 1]
     ])
+    return transforms
+
+
+def preprocess_images_imagenet_r():
+    # The values were taken from here: https://github.com/hendrycks/imagenet-r/blob/master/eval.py
+    mean = [0.485, 0.456, 0.406]
+    std = [0.229, 0.224, 0.225]
+
+    # Compose transforms
+    transforms = Compose(
+        [Resize(256),
+         CenterCrop(224),
+         ToTensor(),
+         Normalize(mean, std)
+         ])
     return transforms

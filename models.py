@@ -3,7 +3,7 @@ import torchvision.models as models
 # Define a function for loading pre-trained models
 def load_model(model_name):
     if model_name == 'resnet50':
-        return models.resnet50(pretrained=True)
+        return models.resnet50(weights="IMAGENET1K_V2")
     if model_name == 'resnet18':
         return models.resnet18(pretrained=True)
     if model_name == 'resnet34':

@@ -1,6 +1,6 @@
 from torchvision.datasets import CIFAR100, STL10, ImageFolder
 from torch.utils.data import DataLoader
-from preprocessing import preprocess_images_cifar_tinyimagenet, preprocess_images_stl_caltech
+from preprocessing import *
 
 
 # Define a function to create a data loader for the CIFAR-100 dataset
