@@ -14,6 +14,8 @@ def load_model(model_name):
         return models.resnet101(weights=weights)
     if model_name == 'resnet152':
         return models.resnet152(weights=weights)
+    if model_name == 'resnet50':
+        return models.resnet50(weights=weights)
     elif model_name == 'vgg16':
         return models.vgg16(weights=weights)
     elif model_name == 'vgg19':
