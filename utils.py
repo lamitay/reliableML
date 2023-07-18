@@ -1,6 +1,7 @@
 import urllib
 import json
 import numpy as np
+import os
 
 
 def load_imagenet_labels():

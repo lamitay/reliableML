@@ -1,1 +1,19 @@
   0%|          | 0/13 [00:00<?, ?it/s]
+Processing predict_imagenet_resnet50_18-07-2023_17-42-37:   0%|          | 0/391 [00:00<?, ?it/s][AProcessing predict_imagenet_resnet50_18-07-2023_17-42-37:   0%|          | 0/391 [00:49<?, ?it/s]
+  0%|          | 0/13 [01:39<?, ?it/s]
+Traceback (most recent call last):
+  File "/home/lamitay/vscode_projects/reliableML/main_predict_dataset_all_models.py", line 182, in <module>
+    main()
+  File "/home/lamitay/vscode_projects/reliableML/main_predict_dataset_all_models.py", line 111, in main
+    output = model(images)
+  File "/home/lamitay/miniconda3/envs/rel_ml/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1190, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home/lamitay/miniconda3/envs/rel_ml/lib/python3.9/site-packages/torchvision/models/resnet.py", line 285, in forward
+    return self._forward_impl(x)
+  File "/home/lamitay/miniconda3/envs/rel_ml/lib/python3.9/site-packages/torchvision/models/resnet.py", line 278, in _forward_impl
+    x = self.avgpool(x)
+  File "/home/lamitay/miniconda3/envs/rel_ml/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1211, in _call_impl
+    hook_result = hook(self, input, result)
+  File "/home/lamitay/vscode_projects/reliableML/utils.py", line 32, in hook
+    np.save(os.path.join(embed_dir, f"{image_idx}_embeddings.npy"), output[i])
+NameError: name 'os' is not defined
