@@ -156,6 +156,113 @@ imagenet_r_wnids = {'n01443537', 'n01484850', 'n01494475', 'n01498041', 'n015148
                     'n07749582', 'n07753275', 'n07753592', 'n07768694', 'n07873807', 'n07880968', 'n07920052',
                     'n09472597', 'n09835506', 'n10565667', 'n12267677'}
 
+# the following two variables were calculated with this code:
+# imagenet_labels = load_imagenet_labels()
+# list = os.listdir('/home/davidva/datasets/imagenet-a')
+# list.remove('README.txt')
+# imagenet_a_wnids = set(list)
+# # get variables that are needed for adjusting the class difference between the two datasets
+# from class_names import all_wnids, imagenet_r_wnids, imagenet_label_indices_in_imagenet_r
+# imagenet_a_mask = [wnid in imagenet_a_wnids for wnid in all_wnids]
+# imagenet_a_labels = np.array(imagenet_labels)[np.array(imagenet_r_mask)]
+
+imagenet_a_labels = ['stingray', 'goldfinch', 'junco', 'American robin', 'jay',
+       'bald eagle', 'vulture', 'newt', 'American bullfrog', 'box turtle',
+       'green iguana', 'agama', 'chameleon', 'American alligator',
+       'garter snake', 'harvestman', 'scorpion', 'tarantula', 'centipede',
+       'sulphur-crested cockatoo', 'lorikeet', 'hummingbird', 'toucan',
+       'duck', 'goose', 'koala', 'jellyfish', 'sea anemone', 'flatworm',
+       'snail', 'crayfish', 'hermit crab', 'flamingo', 'great egret',
+       'oystercatcher', 'pelican', 'sea lion', 'Chihuahua',
+       'Golden Retriever', 'Rottweiler', 'German Shepherd Dog', 'pug',
+       'red fox', 'Persian cat', 'lynx', 'lion', 'American black bear',
+       'mongoose', 'ladybug', 'rhinoceros beetle', 'weevil', 'fly', 'bee',
+       'ant', 'grasshopper', 'stick insect', 'cockroach', 'mantis',
+       'leafhopper', 'dragonfly', 'monarch butterfly', 'small white',
+       'gossamer-winged butterfly', 'starfish', 'cottontail rabbit',
+       'porcupine', 'fox squirrel', 'marmot', 'bison', 'skunk',
+       'armadillo', 'baboon', 'white-headed capuchin',
+       'African bush elephant', 'pufferfish', 'academic gown',
+       'accordion', 'acoustic guitar', 'airliner', 'ambulance', 'apron',
+       'balance beam', 'balloon', 'banjo', 'barn', 'wheelbarrow',
+       'basketball', 'lighthouse', 'beaker', 'bikini', 'bow', 'bow tie',
+       'breastplate', 'broom', 'candle', 'canoe', 'castle', 'cello',
+       'chain', 'chest', 'Christmas stocking', 'cowboy boot', 'cradle',
+       'rotary dial telephone', 'digital clock', 'doormat', 'drumstick',
+       'dumbbell', 'envelope', 'feather boa', 'flagpole', 'forklift',
+       'fountain', 'garbage truck', 'goblet', 'go-kart', 'golf cart',
+       'grand piano', 'hair dryer', 'clothes iron', "jack-o'-lantern",
+       'jeep', 'kimono', 'lighter', 'limousine', 'manhole cover',
+       'maraca', 'marimba', 'mask', 'mitten', 'mosque', 'nail', 'obelisk',
+       'ocarina', 'organ', 'parachute', 'parking meter', 'piggy bank',
+       'billiard table', 'hockey puck', 'quill', 'racket', 'reel',
+       'revolver', 'rocking chair', 'rugby ball', 'salt shaker', 'sandal',
+       'saxophone', 'school bus', 'schooner', 'sewing machine', 'shovel',
+       'sleeping bag', 'snowmobile', 'snowplow', 'soap dispenser',
+       'spatula', 'spider web', 'steam locomotive', 'stethoscope',
+       'couch', 'submarine', 'sundial', 'suspension bridge', 'syringe',
+       'tank', 'teddy bear', 'toaster', 'torch', 'tricycle', 'umbrella',
+       'unicycle', 'viaduct', 'volleyball', 'washing machine',
+       'water tower', 'wine bottle', 'shipwreck', 'guacamole', 'pretzel',
+       'cheeseburger', 'hot dog', 'broccoli', 'cucumber', 'bell pepper',
+       'mushroom', 'lemon', 'banana', 'custard apple', 'pomegranate',
+       'carbonara', 'bubble', 'cliff', 'volcano', 'baseball player',
+       'rapeseed', "yellow lady's slipper", 'corn', 'acorn']
+
+imagenet_a_mask = [False, False, False, False, False, False, True, False, False, False, False, True, False, True, False, True, False, True, False, False, False, False, True, True, False, False, False, True, False, False, True, False, False, False, False, False, False, True, False, True, False, False, True, False, False, False, False, True, False, False, True, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, True, True, False, False, False, False, True, False, False, True, False, False, False, False, False, False, False, False, False, True, True, False, False, False, True, False, True, True, False, True, False, False, False, False, False, True, False, True, True, False, True, False, False, True, False, False, False, False, False, False, False, False, False, False, True, True, False, False, False, False, True, False, True, False, False, False, False, False, False, False, False, False, False, True, True, False, False, False, False, False, True, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, True, False, False, False, True, False, False, False, True, False, False, False, True, False, False, True, False, False, True, False, False, False, False, True, True, True, True, True, True, False, True, True, True, False, True, False, True, False, False, False, True, True, False, True, True, False, False, True, False, False, False, True, True, True, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, True, False, False, False, False, False, False, False, False, True, False, False, False, False, False, True, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, True, False, False, True, True, True, False, True, False, False, True, False, False, False, True, False, False, False, False, True, True, False, False, True, False, False, False, False, True, False, False, True, False, True, False, False, False, False, False, False, True, True, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, True, True, False, False, False, True, True, False, False, False, False, False, False, False, True, False, True, False, False, False, False, False, False, False, False, False, False, True, False, False, True, False, True, False, False, False, True, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, True, False, False, False, False, False, False, False, False, False, False, False, True, False, True, False, False, False, False, False, False, False, False, True, False, False, True, True, False, False, False, False, False, True, False, False, True, False, False, False, False, True, False, False, False, True, True, False, False, False, False, False, False, True, False, False, True, True, False, True, False, False, False, True, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, True, False, True, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, True, True, False, False, False, False, False, False, False, False, False, False, False, False, True, True, True, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, True, False, False, False, False, True, False, True, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, True, False, False, True, False, False, True, False, False, False, False, False, True, False, False, False, False, True, False, True, False, False, True, False, False, False, False, True, True, False, True, False, False, True, True, False, False, False, False, False, True, False, False, False, False, False, True, False, False, False, False, True, False, False, False, False, True, True, True, False, False, False, False, False, False, False, False, True, False, True, False, False, False, False, True, False, False, True, False, False, False, False, False, False, False, True, False, True, False, True, False, False, False, True, False, False, False, False, False, True, False, True, False, False, True, False, False, False, False, False, False, False, False, True, False, False, True, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, True, True, False, False, False, False, False, False, False, True, False, True, False, False, False, False, False, False, True, False, False, True, False, False, False, False, False, False, True, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, True, True, True, False, False, True, False, False, False, False, False, True, False, True, False, True, False, False, False, True, False, False, True, False, True, True, False, True, False, False, False, False, False, False, False, False, False, False, False, True, True, False, False, False, False, False, False, False, True, True, False, False, True, False, True, True, True, False, False, False, False, False, False, False, False, False, False, False]
+
+# # the following two variables were calculated with this code:
+# imagenet_labels = load_imagenet_labels()
+# # get variables that are needed for adjusting the class difference between the two datasets
+# from class_names import all_wnids, imagenet_r_wnids, imagenet_label_indices_in_imagenet_r
+# imagenet_r_mask = [wnid in imagenet_a_wnids for wnid in all_wnids]
+# imagenet_r_labels = np.array(imagenet_labels)[np.array(imagenet_r_mask)]
+
+imagenet_r_labels = ['stingray', 'goldfinch', 'junco', 'American robin', 'jay',
+       'bald eagle', 'vulture', 'newt', 'American bullfrog', 'box turtle',
+       'green iguana', 'agama', 'chameleon', 'American alligator',
+       'garter snake', 'harvestman', 'scorpion', 'tarantula', 'centipede',
+       'sulphur-crested cockatoo', 'lorikeet', 'hummingbird', 'toucan',
+       'duck', 'goose', 'koala', 'jellyfish', 'sea anemone', 'flatworm',
+       'snail', 'crayfish', 'hermit crab', 'flamingo', 'great egret',
+       'oystercatcher', 'pelican', 'sea lion', 'Chihuahua',
+       'Golden Retriever', 'Rottweiler', 'German Shepherd Dog', 'pug',
+       'red fox', 'Persian cat', 'lynx', 'lion', 'American black bear',
+       'mongoose', 'ladybug', 'rhinoceros beetle', 'weevil', 'fly', 'bee',
+       'ant', 'grasshopper', 'stick insect', 'cockroach', 'mantis',
+       'leafhopper', 'dragonfly', 'monarch butterfly', 'small white',
+       'gossamer-winged butterfly', 'starfish', 'cottontail rabbit',
+       'porcupine', 'fox squirrel', 'marmot', 'bison', 'skunk',
+       'armadillo', 'baboon', 'white-headed capuchin',
+       'African bush elephant', 'pufferfish', 'academic gown',
+       'accordion', 'acoustic guitar', 'airliner', 'ambulance', 'apron',
+       'balance beam', 'balloon', 'banjo', 'barn', 'wheelbarrow',
+       'basketball', 'lighthouse', 'beaker', 'bikini', 'bow', 'bow tie',
+       'breastplate', 'broom', 'candle', 'canoe', 'castle', 'cello',
+       'chain', 'chest', 'Christmas stocking', 'cowboy boot', 'cradle',
+       'rotary dial telephone', 'digital clock', 'doormat', 'drumstick',
+       'dumbbell', 'envelope', 'feather boa', 'flagpole', 'forklift',
+       'fountain', 'garbage truck', 'goblet', 'go-kart', 'golf cart',
+       'grand piano', 'hair dryer', 'clothes iron', "jack-o'-lantern",
+       'jeep', 'kimono', 'lighter', 'limousine', 'manhole cover',
+       'maraca', 'marimba', 'mask', 'mitten', 'mosque', 'nail', 'obelisk',
+       'ocarina', 'organ', 'parachute', 'parking meter', 'piggy bank',
+       'billiard table', 'hockey puck', 'quill', 'racket', 'reel',
+       'revolver', 'rocking chair', 'rugby ball', 'salt shaker', 'sandal',
+       'saxophone', 'school bus', 'schooner', 'sewing machine', 'shovel',
+       'sleeping bag', 'snowmobile', 'snowplow', 'soap dispenser',
+       'spatula', 'spider web', 'steam locomotive', 'stethoscope',
+       'couch', 'submarine', 'sundial', 'suspension bridge', 'syringe',
+       'tank', 'teddy bear', 'toaster', 'torch', 'tricycle', 'umbrella',
+       'unicycle', 'viaduct', 'volleyball', 'washing machine',
+       'water tower', 'wine bottle', 'shipwreck', 'guacamole', 'pretzel',
+       'cheeseburger', 'hot dog', 'broccoli', 'cucumber', 'bell pepper',
+       'mushroom', 'lemon', 'banana', 'custard apple', 'pomegranate',
+       'carbonara', 'bubble', 'cliff', 'volcano', 'baseball player',
+       'rapeseed', "yellow lady's slipper", 'corn', 'acorn']
+
+imagenet_r_mask = [False, True, True, False, True, False, True, False, True, True, False, True, False, True, False, False, False, False, False, False, False, False, True, True, False, False, True, False, False, True, False, True, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, True, False, False, False, False, True, False, False, True, False, False, False, False, True, False, False, False, False, False, True, False, False, False, True, False, True, True, False, True, True, False, False, False, False, True, False, True, False, False, False, False, False, True, False, False, False, False, False, False, False, False, True, False, False, True, False, False, False, False, True, False, True, False, False, False, False, False, False, False, False, False, False, False, True, True, False, True, True, False, True, True, False, False, False, True, False, False, False, False, True, True, True, True, False, False, False, False, False, False, False, True, True, False, False, False, False, False, True, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, True, False, False, False, True, False, False, False, True, False, False, False, True, True, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, True, True, False, True, True, False, False, False, False, False, False, True, False, False, True, False, True, False, False, True, True, False, False, True, False, False, False, False, True, True, False, False, True, False, True, False, True, False, True, False, False, False, False, False, False, True, True, False, False, False, True, False, False, False, False, False, False, True, True, False, True, True, True, False, False, True, False, False, True, False, True, False, False, False, False, False, False, True, True, True, True, False, False, True, True, False, False, False, True, False, False, False, True, False, False, False, True, False, False, True, False, False, False, True, True, False, True, True, False, True, True, False, False, True, False, False, True, False, False, False, False, False, True, False, True, False, False, False, False, False, True, True, False, False, True, True, True, True, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, True, False, False, True, False, False, False, True, False, False, False, True, False, False, False, False, False, True, False, False, False, False, False, True, True, False, False, False, False, False, False, False, False, False, False, True, False, False, True, False, True, False, False, False, False, True, False, True, False, False, False, True, False, False, False, False, False, True, True, False, False, False, False, False, False, False, False, True, False, False, False, False, True, True, False, False, False, False, False, True, True, True, True, False, False, False, True, False, False, False, False, False, False, True, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, True, False, False, True, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, True, False, False, False, True, False, False, False, True, False, False, False, False, False, True, True, False, True, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, True, False, False, False, True, False, False, False, True, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, True, False, False, False, False, False, True, False, True, False, False, True, True, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, True, False, False, True, False, False, False, False, True, False, False, False, True, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, True, False, False, False, False, False, True, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, True, True, True, True, False, True, True, False, False, False, False, False, True, False, True, False, True, True, True, False, True, False, True, True, False, False, True, False, False, False, False, False, True, False, True, False, True, False, False, False, False, False, False, False, False, False, False, False, False, True, True, False, True, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False]
+
 imagenet_label_indices_in_imagenet_r = [1, 2, 4, 6, 8, 9, 11, 13, 22, 23, 26, 29, 31, 39, 47, 63, 71, 76, 79, 84,
                                         90, 94, 96, 97, 99, 100, 105, 107, 113, 122, 125, 130, 132, 144, 145, 147,
                                         148, 150, 151, 155, 160, 161, 162, 163, 171, 172, 178, 187, 195, 199, 203,
