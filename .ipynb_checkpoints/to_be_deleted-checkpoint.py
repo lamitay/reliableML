@@ -24,9 +24,7 @@ from preprocessing import preprocess_images_any_dataset
 def main():
     # Define device, batch size and directory path for ImageNet validation set
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")    
-    data_name = 'imagenet-a'
     base_exp_dir = '/home/davidva/experiments_David'
-    val_dir = '/home/davidva/datasets/imagenet-a'
 
     # Define the batch size
     batch_size = 128
@@ -34,9 +32,9 @@ def main():
     # Load imagenet labels as real classes
     imagenet_labels = load_imagenet_labels()  # 'tench', 'goldfish', 'great white shark', 'tiger shark', 'hammerhead shark'...
 
-    data_names = ['imagenet-v2', 'imagenet-sketch', 'imagenet-r', 'imagenet-a', 'imagenet']
+    data_names = ['imagenetsketch', 'imagenet-r', 'imagenet-a', 'imagenet']
     for data_name in data_names:
-        if data_name in ['imagenet', 'imagenet-v2', 'imagenet-sketch']:
+        if data_name in ['imagenet', 'imagenetv2-matched-frequency-format-val', 'imagenetv2-threshold0.7-format-val', 'imagenetv2-top-images-format-val', 'imagenetsketch']:
             ds_specific_mask = [True] * 1000
             ds_specific_labels = imagenet_labels  # the classes of the specific dataset that we're working with
         elif data_name == 'imagenet-r':
@@ -46,7 +44,15 @@ def main():
                                          # it should be removed from there in order to create the DataFolder object
             ds_specific_mask = class_names.imagenet_a_mask
             ds_specific_labels = class_names.imagenet_a_labels
-            
+
+        if data_name == 'imagenet':
+            val_dir = '/datasets/ImageNet/val/'
+        elif data_name == 'imagenetsketch':
+            val_dir = '/home/davidva/datasets/imagenetsketch/sketch'
+        else:
+            val_dir = '/home/davidva/datasets/' + data_name
+        print('data_name is: ' + data_name + ' and val_dir is: ' + val_dir)
+        
         model_names = ['resnet50', 'resnet18', 'resnet34', 'resnet101', 'resnet152', 'vgg16', 'vgg19', 'alexnet', 'resnext', 'wide_resnet', 'densenet121', 'googlenet', 'mobilenet_v2']
     
         for model_name in model_names:
@@ -204,6 +210,7 @@ def main():
             # df_embeddings['image_path'] = results_df['image_path']
             # # Save as CSV
             # df_embeddings.to_csv(os.path.join(results_dir, f"val_embeddings_2d_{exp_base_name}.csv"), index=False)
+            
             
 if __name__ == '__main__':
     main()
