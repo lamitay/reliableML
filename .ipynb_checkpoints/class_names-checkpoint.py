@@ -276,3 +276,5 @@ imagenet_label_indices_in_imagenet_r = [1, 2, 4, 6, 8, 9, 11, 13, 22, 23, 26, 29
                                         763, 768, 774, 776, 779, 780, 787, 805, 812, 815, 820, 824, 833, 847, 852,
                                         866, 875, 883, 889, 895, 907, 928, 931, 932, 933, 934, 936, 937, 943, 945,
                                         947, 948, 949, 951, 953, 954, 957, 963, 965, 967, 980, 981, 983, 988]
+
+imagenet_vid_robust_labels = ['airplane', 'antelope', 'bear', 'bicycle', 'bird', 'bus', 'car', 'cattle', 'dog', 'domestic_cat', 'elephant', 'fox', 'giant_panda', 'hamster', 'horse', 'lion', 'lizard', 'monkey', 'motorcycle', 'rabbit', 'red_panda', 'sheep', 'snake', 'squirrel', 'tiger', 'train', 'turtle', 'watercraft', 'whale', 'zebra', 'entity']
