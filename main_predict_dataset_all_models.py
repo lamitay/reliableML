@@ -30,10 +30,22 @@ def main():
                         help="The name of the dataset to use.")
     parser.add_argument("--batch_size", type=int, default=128,
                         help="Batch size for data loading.")
+    # parser.add_argument("--model_names", type=str, nargs='+',
+    #                     default=['resnet50', 'resnet18', 'resnet34', 'resnet101', 'resnet152', 'vgg16', 'vgg19', 'alexnet', 'resnext', 'wide_resnet', 'densenet121', 'googlenet', 'mobilenet_v2'],
+    #                     help="The names of the models to evaluate.")
     parser.add_argument("--model_names", type=str, nargs='+',
-                        default=['resnet50', 'resnet18', 'resnet34', 'resnet101', 'resnet152', 'vgg16', 'vgg19', 'alexnet', 'resnext', 'wide_resnet', 'densenet121', 'googlenet', 'mobilenet_v2'],
+                        default=['vgg16'],
                         help="The names of the models to evaluate.")
+    
     args = parser.parse_args()
+
+    # Set reproducibility variables
+    seed = 42
+    torch.manual_seed(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    torch.use_deterministic_algorithms(True)
+    np.random.seed(seed)
 
     user = args.user
     if user == 'amitay':
@@ -76,13 +88,25 @@ def main():
         os.makedirs(exp_dir, exist_ok=True)
         os.makedirs(results_dir, exist_ok=True)
         os.makedirs(embed_dir, exist_ok=True)
-            
+
+        # # Define transformations for the input images
+        # transform = transforms.Compose([
+        #     transforms.Resize(256),
+        #     transforms.CenterCrop(224),
+        #     transforms.ToTensor(),
+        #     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        # ]) 
+
         # Load the ImageNet validation dataset with defined transformations
         val_dataset = ImageFolder(val_dir, transform=preprocess_images_any_dataset(model_name))
+        # val_dataset = ImageFolder(val_dir, transform=transform)
         val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=5)
+        
 
         # Load model
         model = load_model(model_name).to(device)
+
+        model.eval()
         
         # Register the hook at the penultimate layer of the model
         if model_name in ['mobilenet_v2']:
@@ -105,7 +129,7 @@ def main():
                 images = images.to(device)
                 labels = labels.to(device)
 
-                handle = layer.register_forward_hook(get_embedding_hook(batch_idx, batch_size, embed_dir))
+                # handle = layer.register_forward_hook(get_embedding_hook(batch_idx, batch_size, embed_dir))
 
                 # Run forward pass through the model and calculate probabilities
                 output = model(images)
@@ -122,6 +146,7 @@ def main():
                     image_idx = batch_idx * batch_size + i
                     image_path = val_dataset.imgs[i + batch_num * batch_size][0]
                     true_class = ds_specific_labels[labels[i].item()]  # e.g. labels[i].item()=0. true_class=goldfish
+                    # true_class = imagenet_labels[labels[i].item()]  # e.g. labels[i].item()=0. true_class=goldfish
                     predictions = {"image_path": image_path,
                                    "true_class": true_class,
                                    "embeddings_path":  os.path.join(embed_dir, f"{image_idx}_embeddings.npy")}
@@ -134,9 +159,17 @@ def main():
                         # Check if top-1 prediction is correct
                         if j == 0 and prediction_class == true_class:
                             total_correct += 1
+
+                        # if j==0:
+                        #     if prediction_class == true_class:
+                        #         total_correct += 1
+                        #         print(f"Prediction CORRECTA. Prediction: {prediction_class} ---> True class: {true_class}")
+                        #     else:
+                        #         print(f"Prediction WRONGA. Prediction: {prediction_class} ---> True class: {true_class}")
+
                     results.append(predictions)
                 batch_num += 1
-                handle.remove()  # Unregister the hook after processing the batch
+                # handle.remove()  # Unregister the hook after processing the batch
         
         # Convert results to DataFrame and save to CSV
         results_df = pd.DataFrame(results)

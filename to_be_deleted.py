@@ -25,7 +25,15 @@ def main():
     # Define device, batch size and directory path for ImageNet validation set
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")    
     base_exp_dir = '/home/davidva/experiments_David'
-
+    
+    # Set reproducibility variables
+    seed = 42
+    torch.manual_seed(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    torch.use_deterministic_algorithms(True)
+    np.random.seed(seed)
+    
     # Define the batch size
     batch_size = 128
 
@@ -75,6 +83,7 @@ def main():
     
             # Load model
             model = load_model(model_name).to(device)
+            model.eval()
             
             # Register the hook at the penultimate layer of the model
             if model_name in ['mobilenet_v2']:
