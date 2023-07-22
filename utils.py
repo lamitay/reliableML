@@ -26,7 +26,12 @@ def get_embedding_hook(batch_idx, batch_size, embed_dir):
         function: A hook function that can be registered to a PyTorch nn.Module.
     """
     def hook(module, input, output):
-        output = output.detach().cpu().numpy()
+        # output = output.detach().cpu().numpy()
+        output = output.detach()  # detach from computation graph
+        if len(output.shape) > 2:
+            output = output.mean([2, 3])  # If spatial dimensions exist, average across them
+        output = output.cpu().numpy()  # convert to numpy array
+
         for i in range(output.shape[0]):
             # Calculate the overall index of the image in the dataset
             image_idx = batch_idx * batch_size + i
