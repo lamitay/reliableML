@@ -25,14 +25,24 @@ def main():
     # Define device, batch size and directory path for ImageNet validation set
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")    
     base_exp_dir = '/home/davidva/experiments_David'
-
+    
+    # Set reproducibility variables
+    seed = 42
+    torch.manual_seed(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    torch.use_deterministic_algorithms(True)
+    np.random.seed(seed)
+    
     # Define the batch size
     batch_size = 128
 
     # Load imagenet labels as real classes
     imagenet_labels = load_imagenet_labels()  # 'tench', 'goldfish', 'great white shark', 'tiger shark', 'hammerhead shark'...
 
-    data_names = ['imagenetsketch', 'imagenet-r', 'imagenet-a', 'imagenet']
+    # data_names = ['imagenet', 'imagenetv2-matched-frequency-format-val', 'imagenetv2-threshold0.7-format-val', 'imagenetv2-top-images-format-val', 'imagenetsketch/sketch', 'imagenet-r', 'imagenet-a']
+    data_names = ['imagenetsketch', 'imagenet-r', 'imagenet-a']
+
     for data_name in data_names:
         if data_name in ['imagenet', 'imagenetv2-matched-frequency-format-val', 'imagenetv2-threshold0.7-format-val', 'imagenetv2-top-images-format-val', 'imagenetsketch']:
             ds_specific_mask = [True] * 1000
@@ -75,12 +85,13 @@ def main():
     
             # Load model
             model = load_model(model_name).to(device)
+            model.eval()
             
             # Register the hook at the penultimate layer of the model
             if model_name in ['mobilenet_v2']:
                 layer = model.classifier[0]
             elif model_name in ['densenet121']:
-                layer = model.features.denseblock3.denselayer24.conv2  # model.features.norm5 sucks, features.denseblock3.denselayer24 is okay, features gives 1000-of-shape output, model.features.denseblock3.denselayer24.conv2 is okay
+                layer = model.features  # model.features.norm5 sucks, features.denseblock3.denselayer24 is okay, features gives 1000-of-shape output, model.features.denseblock3.denselayer24.conv2 is okay
             elif model_name in ['vgg16', 'vgg19']:
                 layer = model.classifier[-2]
             else:

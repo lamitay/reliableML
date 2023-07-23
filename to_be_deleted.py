@@ -40,7 +40,9 @@ def main():
     # Load imagenet labels as real classes
     imagenet_labels = load_imagenet_labels()  # 'tench', 'goldfish', 'great white shark', 'tiger shark', 'hammerhead shark'...
 
-    data_names = ['imagenetsketch', 'imagenet-r', 'imagenet-a', 'imagenet']
+    # data_names = ['imagenet', 'imagenetv2-matched-frequency-format-val', 'imagenetv2-threshold0.7-format-val', 'imagenetv2-top-images-format-val', 'imagenetsketch/sketch', 'imagenet-r', 'imagenet-a']
+    data_names = ['imagenetsketch', 'imagenet-r', 'imagenet-a']
+
     for data_name in data_names:
         if data_name in ['imagenet', 'imagenetv2-matched-frequency-format-val', 'imagenetv2-threshold0.7-format-val', 'imagenetv2-top-images-format-val', 'imagenetsketch']:
             ds_specific_mask = [True] * 1000
@@ -89,7 +91,7 @@ def main():
             if model_name in ['mobilenet_v2']:
                 layer = model.classifier[0]
             elif model_name in ['densenet121']:
-                layer = model.features.denseblock3.denselayer24.conv2  # model.features.norm5 sucks, features.denseblock3.denselayer24 is okay, features gives 1000-of-shape output, model.features.denseblock3.denselayer24.conv2 is okay
+                layer = model.features  # model.features.norm5 sucks, features.denseblock3.denselayer24 is okay, features gives 1000-of-shape output, model.features.denseblock3.denselayer24.conv2 is okay
             elif model_name in ['vgg16', 'vgg19']:
                 layer = model.classifier[-2]
             else:
