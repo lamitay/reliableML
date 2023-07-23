@@ -24,8 +24,9 @@ from preprocessing import preprocess_images_any_dataset
 def main():
     # Define device, batch size and directory path for ImageNet validation set
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")    
-    base_exp_dir = '/home/davidva/experiments_David'
-    
+    # base_exp_dir = '/home/davidva/experiments_David'
+    base_exp_dir = '/home/lamitay/experiments'
+
     # Set reproducibility variables
     seed = 42
     torch.manual_seed(seed)
@@ -41,16 +42,14 @@ def main():
     imagenet_labels = load_imagenet_labels()  # 'tench', 'goldfish', 'great white shark', 'tiger shark', 'hammerhead shark'...
 
     # data_names = ['imagenet', 'imagenetv2-matched-frequency-format-val', 'imagenetv2-threshold0.7-format-val', 'imagenetv2-top-images-format-val', 'imagenetsketch/sketch', 'imagenet-r', 'imagenet-a']
-    data_names = ['imagenetsketch', 'imagenet-r', 'imagenet-a']
+    data_name = 'imagenet'
+    ood_datasets = ['imagenet-r', 'imagenet-a']
 
-    for data_name in data_names:
-        if data_name in ['imagenet', 'imagenetv2-matched-frequency-format-val', 'imagenetv2-threshold0.7-format-val', 'imagenetv2-top-images-format-val', 'imagenetsketch']:
-            ds_specific_mask = [True] * 1000
-            ds_specific_labels = imagenet_labels  # the classes of the specific dataset that we're working with
-        elif data_name == 'imagenet-r':
+    for ood_dataset in ood_datasets:
+        if ood_dataset == 'imagenet-r':
             ds_specific_mask = class_names.imagenet_r_mask
             ds_specific_labels = class_names.imagenet_r_labels
-        elif data_name == 'imagenet-a':  # note: if the hidden file .ipynb_checkpoints is inside of the folder of the imagenet-a data,
+        elif ood_dataset == 'imagenet-a':  # note: if the hidden file .ipynb_checkpoints is inside of the folder of the imagenet-a data,
                                          # it should be removed from there in order to create the DataFolder object
             ds_specific_mask = class_names.imagenet_a_mask
             ds_specific_labels = class_names.imagenet_a_labels
@@ -61,14 +60,15 @@ def main():
             val_dir = '/home/davidva/datasets/imagenetsketch/sketch'
         else:
             val_dir = '/home/davidva/datasets/' + data_name
-        print('data_name is: ' + data_name + ' and val_dir is: ' + val_dir)
+
+        print(f'data_name is: {data_name}, data masks of: {ood_dataset} and val_dir is: {val_dir}')
         
         model_names = ['resnet50', 'resnet18', 'resnet34', 'resnet101', 'resnet152', 'vgg16', 'vgg19', 'alexnet', 'resnext', 'wide_resnet', 'densenet121', 'googlenet', 'mobilenet_v2']
     
         for model_name in model_names:
             # Experiment name
             curr_time = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
-            exp_base_name = 'predict_' + data_name + '_' + model_name
+            exp_base_name = 'predict_' + data_name + '-labels-' + ood_dataset + '_' + model_name
             exp_name = exp_base_name + '_' + curr_time
             exp_dir = os.path.join(base_exp_dir, exp_name)
             results_dir = os.path.join(exp_dir, 'results')
