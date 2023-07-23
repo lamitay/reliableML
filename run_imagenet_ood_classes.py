@@ -46,13 +46,16 @@ def main():
     ood_datasets = ['imagenet-r', 'imagenet-a']
 
     for ood_dataset in ood_datasets:
+        
+        ds_specific_mask = [True] * 1000
+        ds_specific_labels = imagenet_labels  # the classes of the specific dataset that we're working with
         if ood_dataset == 'imagenet-r':
-            ds_specific_mask = class_names.imagenet_r_mask
-            ds_specific_labels = class_names.imagenet_r_labels
+            ood_ds_specific_mask = class_names.imagenet_r_mask
+            ood_ds_specific_labels = class_names.imagenet_r_labels
         elif ood_dataset == 'imagenet-a':  # note: if the hidden file .ipynb_checkpoints is inside of the folder of the imagenet-a data,
                                          # it should be removed from there in order to create the DataFolder object
-            ds_specific_mask = class_names.imagenet_a_mask
-            ds_specific_labels = class_names.imagenet_a_labels
+            ood_ds_specific_mask = class_names.imagenet_a_mask
+            ood_ds_specific_labels = class_names.imagenet_a_labels
 
         if data_name == 'imagenet':
             val_dir = '/datasets/ImageNet/val/'
@@ -68,7 +71,7 @@ def main():
         for model_name in model_names:
             # Experiment name
             curr_time = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
-            exp_base_name = 'predict_' + data_name + '-labels-' + ood_dataset + '_' + model_name
+            exp_base_name = 'predict_' + data_name + '_labels-' + ood_dataset + '_' + model_name
             exp_name = exp_base_name + '_' + curr_time
             exp_dir = os.path.join(base_exp_dir, exp_name)
             results_dir = os.path.join(exp_dir, 'results')
@@ -167,9 +170,13 @@ def main():
                     handle.remove()  # Unregister the hook after processing the batch
             
             # Convert results to DataFrame and save to CSV
-            results_df = pd.DataFrame(results)
+            full_results_df = pd.DataFrame(results)
+            full_results_df.to_csv(os.path.join(results_dir, f"all_imagenet_labeles_full_val_predictions_{exp_base_name}.csv"), index=False)
+
+            # Take only the union of classes and calculate statistics
+            results_df = full_results_df[full_results_df['true_class'].isin(ood_ds_specific_labels)]
             results_df.to_csv(os.path.join(results_dir, f"full_val_predictions_{exp_base_name}.csv"), index=False)
-        
+            
             # Calculate average and std of the top1 confidences across the val set2
             avg_confidence = results_df["top1_confidence"].mean()
             std_confidence = results_df["top1_confidence"].std()
