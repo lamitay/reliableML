@@ -125,9 +125,21 @@ def main():
     
                     # Run forward pass through the model and calculate probabilities
                     output = model(images)
+                    # probabilities = torch.nn.functional.softmax(output, dim=1)
+                    # probabilities = probabilities * torch.tensor(ds_specific_mask).to(device)  # using only the classes that are in both datasets
+
+                    # Run forward pass through the model
+                    output = model(images)
+
+                    # Create a tensor of the mask on the device
+                    mask_tensor = torch.tensor(ds_specific_mask).to(device)
+
+                    # Replace masked values in the output with negative infinity
+                    output[~mask_tensor] = float('-inf')
+
+                    # Apply softmax
                     probabilities = torch.nn.functional.softmax(output, dim=1)
-                    probabilities = probabilities * torch.tensor(ds_specific_mask).to(device)  # using only the classes that are in both datasets
-        
+
                     # Get top-5 predictions and confidences and some statistics
                     top5_prob, top5_classes = torch.topk(probabilities, 5)
                     _, _, top5_means, top5_variances, top5_skewnesses, top5_kurtosises = scipy.stats.describe(top5_prob.detach().cpu().numpy() , axis=1)
