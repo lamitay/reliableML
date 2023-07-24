@@ -48,7 +48,7 @@ def main():
             ds_specific_mask = [True] * 1000
             ds_specific_labels = imagenet_labels  # the classes of the specific dataset that we're working with
         elif data_name == 'imagenet-r':
-            ds_specific_r_mask = class_names.imagenet_r_mask
+            ds_specific_mask = class_names.imagenet_r_mask
             ds_specific_labels = class_names.imagenet_r_labels
         elif data_name == 'imagenet-a':  # note: if the hidden file .ipynb_checkpoints is inside of the folder of the imagenet-a data,
                                          # it should be removed from there in order to create the DataFolder object

@@ -41,14 +41,14 @@ def main():
     imagenet_labels = load_imagenet_labels()  # 'tench', 'goldfish', 'great white shark', 'tiger shark', 'hammerhead shark'...
 
     # data_names = ['imagenet', 'imagenetv2-matched-frequency-format-val', 'imagenetv2-threshold0.7-format-val', 'imagenetv2-top-images-format-val', 'imagenetsketch/sketch', 'imagenet-r', 'imagenet-a']
-    data_names = ['imagenetsketch', 'imagenet-r', 'imagenet-a']
+    data_names = ['imagenet-r', 'imagenet-a']
 
     for data_name in data_names:
         if data_name in ['imagenet', 'imagenetv2-matched-frequency-format-val', 'imagenetv2-threshold0.7-format-val', 'imagenetv2-top-images-format-val', 'imagenetsketch']:
             ds_specific_mask = [True] * 1000
             ds_specific_labels = imagenet_labels  # the classes of the specific dataset that we're working with
         elif data_name == 'imagenet-r':
-            ds_specific_r_mask = class_names.imagenet_r_mask
+            ds_specific_mask = class_names.imagenet_r_mask
             ds_specific_labels = class_names.imagenet_r_labels
         elif data_name == 'imagenet-a':  # note: if the hidden file .ipynb_checkpoints is inside of the folder of the imagenet-a data,
                                          # it should be removed from there in order to create the DataFolder object
