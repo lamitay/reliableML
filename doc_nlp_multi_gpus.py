@@ -11,6 +11,7 @@ from datetime import datetime
 from tqdm import tqdm
 
 
+
 class ReviewsDataset(Dataset):
     def __init__(self, encodings, labels):
         self.encodings = encodings
@@ -49,8 +50,21 @@ def train(model, dataset, optimizer, device):
         loss.backward()
         optimizer.step()
 
-def get_confidences(model, dataset, device):
-    loader = DataLoader(dataset, batch_size=16)*torch.cuda.device_count()
+def get_confidences(model, dataset, device, num_samples_per_class=None):
+    if num_samples_per_class is not None:
+        class_0_indices = [i for i in range(len(dataset)) if dataset[i]['labels'].item() == 0]
+        class_1_indices = [i for i in range(len(dataset)) if dataset[i]['labels'].item() == 1]
+
+        # If there are not enough samples in any of the classes, raise an exception
+        if num_samples_per_class > len(class_0_indices) or num_samples_per_class > len(class_1_indices):
+            raise ValueError("Not enough samples in one or more classes")
+
+        selected_indices = np.concatenate([np.random.choice(class_0_indices, size=num_samples_per_class, replace=False),
+                                           np.random.choice(class_1_indices, size=num_samples_per_class, replace=False)])
+        
+        dataset = torch.utils.data.Subset(dataset, selected_indices)
+
+    loader = DataLoader(dataset, batch_size=16*torch.cuda.device_count())
     model = torch.nn.DataParallel(model)
     model.eval()
     confidences = []
@@ -123,19 +137,40 @@ def main(args):
         model_copy.save_pretrained(model_path)
 
     # Get confidences on in-distribution (IMDB) and out-of-distribution (Amazon) data
+    num_samples_per_class = min(len([i for i in range(len(imdb_test_dataset)) if imdb_test_dataset[i]['labels'].item() == 0]),
+                                len([i for i in range(len(imdb_test_dataset)) if imdb_test_dataset[i]['labels'].item() == 1]),
+                                len([i for i in range(len(amazon_dataset)) if amazon_dataset[i]['labels'].item() == 0]),
+                                len([i for i in range(len(amazon_dataset)) if amazon_dataset[i]['labels'].item() == 1])) # get the minimum number of samples per class from the two datasets
+
     imdb_confidences = []
     amazon_confidences = []
     for model in bootstrap_models:
-        imdb_confidences.append(get_confidences(model, imdb_test_dataset, device))
-        amazon_confidences.append(get_confidences(model, amazon_dataset, device))
+        imdb_confidences.append(get_confidences(model, imdb_test_dataset, device, num_samples_per_class))
+        amazon_confidences.append(get_confidences(model, amazon_dataset, device, num_samples_per_class))
+    
+    # Calculate the mean confidence for each dataset per each bootstrap
+    imdb_mean_confidences = [np.mean(confidences) for confidences in imdb_confidences]
+    amazon_mean_confidences = [np.mean(confidences) for confidences in amazon_confidences]
 
-    # Get the difference of confidences
-    doc = np.array(imdb_confidences) - np.array(amazon_confidences)
+    # Calculate the difference of confidences
+    doc = np.array(imdb_mean_confidences) - np.array(amazon_mean_confidences)
 
     # Plotting
-    plt.boxplot(doc.transpose())
-    plt.ylabel('Difference of Confidences')
+    plt.figure(figsize=(10, 5))
+
+    plt.subplot(1, 2, 1)
+    plt.hist(doc, bins=30, edgecolor='black')
+    plt.title('Histogram of Mean Difference of Confidences')
+    plt.xlabel('Mean DoC')
+    plt.ylabel('Frequency')
+
+    plt.subplot(1, 2, 2)
+    plt.boxplot(doc)
+    plt.title('Boxplot of Mean Difference of Confidences')
+
+    plt.tight_layout()
     plt.savefig(os.path.join(results_dir, 'DoC_distribution.png'))
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
