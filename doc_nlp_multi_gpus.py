@@ -12,6 +12,12 @@ from tqdm import tqdm
 from sklearn.metrics import roc_auc_score, average_precision_score, confusion_matrix, accuracy_score
 from pandas import DataFrame
 import pandas as pd
+from torch.nn.parallel import DistributedDataParallel as DDP
+from torch import distributed as dist
+
+
+# Set the seed for reproducibility
+torch.manual_seed(42)
 
 
 def calculate_metrics(y_true, y_score):
@@ -48,16 +54,17 @@ def check_class_balance(labels):
         indices_to_keep.extend(np.random.choice(indices, size=min_count, replace=False))
     return indices_to_keep
 
-def train(model, dataset, optimizer, device):
-    loader = DataLoader(dataset, batch_size=16*torch.cuda.device_count(), shuffle=True)
+def train(model, dataset, optimizer, device, num_epochs):
+    loader = DataLoader(dataset, batch_size=16*torch.cuda.device_count(), shuffle=True, num_workers=4)
     model = torch.nn.DataParallel(model)
     model.train()
-    for batch in tqdm(loader, desc="Training"):
-        optimizer.zero_grad()
-        outputs = model(**{k: v.to(device) for k, v in batch.items()})
-        loss = outputs[0].mean()  # Take the mean of the losses
-        loss.backward()
-        optimizer.step()
+    for epoch in tqdm(num_epochs):
+        for batch in tqdm(loader, desc="Training"):
+            optimizer.zero_grad()
+            outputs = model(**{k: v.to(device) for k, v in batch.items()})
+            loss = outputs[0].mean()  # Take the mean of the losses
+            loss.backward()
+            optimizer.step()
 
 def get_confidences(model, dataset, device, num_samples_per_class=None):
     if num_samples_per_class is not None:
@@ -73,7 +80,7 @@ def get_confidences(model, dataset, device, num_samples_per_class=None):
         
         dataset = torch.utils.data.Subset(dataset, selected_indices)
 
-    loader = DataLoader(dataset, batch_size=16*torch.cuda.device_count())
+    loader = DataLoader(dataset, batch_size=16*torch.cuda.device_count(), num_workers=4)
     model = torch.nn.DataParallel(model)
     model.eval()
     confidences = []
@@ -89,6 +96,8 @@ def get_confidences(model, dataset, device, num_samples_per_class=None):
 def main(args):
     base_exp_dir = args.base_exp_dir
     exp_name = args.exp_name
+    num_epochs = args.num_epochs
+
 
     # Experiment name
     curr_time = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
@@ -111,7 +120,8 @@ def main(args):
     # Load tokenizer and model
     tokenizer = DistilBertTokenizerFast.from_pretrained('distilbert-base-uncased')
     model = DistilBertForSequenceClassification.from_pretrained('distilbert-base-uncased', num_labels=2).to(device)
-    model = torch.nn.DataParallel(model).to(device) # Wrap model for multi-GPU use
+    model = DDP(model, device_ids=[device])  # Wrap model for multi-GPU use with DDP
+
 
     # Preprocessing IMDB dataset
     imdb_encodings = tokenizer(imdb_dataset['text'], truncation=True, padding=True)
@@ -141,7 +151,7 @@ def main(args):
         bootstrap_dataset = torch.utils.data.Subset(imdb_train_dataset, sampled_indices)
         model_copy = DistilBertForSequenceClassification.from_pretrained('distilbert-base-uncased', num_labels=2).to(device)
         optimizer = AdamW(model_copy.parameters())
-        train(model_copy, bootstrap_dataset, optimizer, device)
+        train(model_copy, bootstrap_dataset, optimizer, device, num_epochs)
         bootstrap_models.append(model_copy)
 
         # Save model
@@ -192,7 +202,7 @@ def main(args):
     # Plotting function
     def plot_metrics(df, title, filename):
         plt.figure(figsize=(10, 5))
-        for metric in ['accuracy', 'AUROC', 'mean_precision', 'TP', 'FN', 'FP', 'TN']:
+        for metric in ['accuracy', 'AUROC', 'mean_precision', 'avg_confidence']:
             plt.plot(df['bootstrap_epoch'], df[metric], label=metric)
         plt.xlabel('Bootstrap epoch')
         plt.ylabel('Metric value')
@@ -222,102 +232,11 @@ def main(args):
     plt.savefig(os.path.join(results_dir, 'DoC_distribution.png'))
 
 
-
-
-    # for model in bootstrap_models:
-    #     imdb_confidences.append(get_confidences(model, imdb_test_dataset, device, num_samples_per_class))
-    #     amazon_confidences.append(get_confidences(model, amazon_dataset, device, num_samples_per_class))
-    
-    # # Calculate the mean confidence for each dataset per each bootstrap
-    # imdb_mean_confidences = [np.mean(confidences) for confidences in imdb_confidences]
-    # amazon_mean_confidences = [np.mean(confidences) for confidences in amazon_confidences]
-
-    # # Calculate the difference of confidences
-    # doc = np.array(imdb_mean_confidences) - np.array(amazon_mean_confidences)
-
-    # # Plotting
-    # plt.figure(figsize=(10, 5))
-
-    # plt.subplot(1, 2, 1)
-    # plt.hist(doc, bins=30, edgecolor='black')
-    # plt.title('Histogram of Mean Difference of Confidences')
-    # plt.xlabel('Mean DoC')
-    # plt.ylabel('Frequency')
-
-    # plt.subplot(1, 2, 2)
-    # plt.boxplot(doc)
-    # plt.title('Boxplot of Mean Difference of Confidences')
-
-    # plt.tight_layout()
-    # plt.savefig(os.path.join(results_dir, 'DoC_distribution.png'))
-
-    # # Create a data frame to store metrics
-    # id_metrics_df = DataFrame(columns=['bootstrap_epoch', 'AUROC', 'mean_precision', 'TP', 'FN', 'FP', 'TN'])
-    # ood_metrics_df = DataFrame(columns=['bootstrap_epoch', 'AUROC', 'mean_precision', 'TP', 'FN', 'FP', 'TN'])
-
-
-    # for i, model in enumerate(bootstrap_models):
-    #     imdb_confidences = get_confidences(model, imdb_test_dataset, device, num_samples_per_class)
-    #     amazon_confidences = get_confidences(model, amazon_dataset, device, num_samples_per_class)
-
-    #     imdb_y_true = [imdb_test_dataset[i]['labels'].item() for i in range(len(imdb_test_dataset))]
-    #     amazon_y_true = [amazon_dataset[i]['labels'].item() for i in range(len(amazon_dataset))]
-
-    #     imdb_auroc, imdb_mean_precision, imdb_tp, imdb_fn, imdb_fp, imdb_tn = calculate_metrics(imdb_y_true, imdb_confidences)
-    #     amazon_auroc, amazon_mean_precision, amazon_tp, amazon_fn, amazon_fp, amazon_tn = calculate_metrics(amazon_y_true, amazon_confidences)
-
-    #     id_metrics_df = id_metrics_df.append({
-    #         'bootstrap_epoch': i,
-    #         'AUROC': imdb_auroc,
-    #         'mean_precision': imdb_mean_precision,
-    #         'TP': imdb_tp,
-    #         'FN': imdb_fn,
-    #         'FP': imdb_fp,
-    #         'TN': imdb_tn
-    #     }, ignore_index=True)
-
-    #     ood_metrics_df = ood_metrics_df.append({
-    #         'bootstrap_epoch': i,
-    #         'AUROC': amazon_auroc,
-    #         'mean_precision': amazon_mean_precision,
-    #         'TP': amazon_tp,
-    #         'FN': amazon_fn,
-    #         'FP': amazon_fp,
-    #         'TN': amazon_tn
-    #     }, ignore_index=True)
-
-    # id_metrics_df.to_csv(os.path.join(results_dir, 'id_bootstrap_metrics.csv'), index=False)
-    # ood_metrics_df.to_csv(os.path.join(results_dir, 'id_bootstrap_metrics.csv'), index=False)
-
-    # plt.figure(figsize=(10, 5))
-
-    # for metric in ['AUROC', 'mean_precision', 'TP', 'FN', 'FP', 'TN']:
-    #     plt.plot(id_metrics_df['bootstrap_epoch'], id_metrics_df[metric], label=metric)
-
-    # plt.xlabel('Bootstrap epoch')
-    # plt.ylabel('Metric value')
-    # plt.title('In distribution bootstrap metrics')
-    # plt.legend()
-    # plt.tight_layout()
-    # plt.savefig(os.path.join(results_dir, 'id_bootstrap_metrics_plot.png'))
-
-    # plt.figure(figsize=(10, 5))
-
-    # for metric in ['AUROC', 'mean_precision', 'TP', 'FN', 'FP', 'TN']:
-    #     plt.plot(ood_metrics_df['bootstrap_epoch'], ood_metrics_df[metric], label=metric)
-
-    # plt.xlabel('Bootstrap epoch')
-    # plt.ylabel('Metric value')
-    # plt.title('Out of distribution bootstrap metrics')
-    # plt.legend()
-    # plt.tight_layout()
-    # plt.savefig(os.path.join(results_dir, 'ood_bootstrap_metrics_plot.png'))
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--base_exp_dir', type=str, default='/home/lamitay/experiments', help='Output directory')
     parser.add_argument('--exp_name', type=str, default='NLP_doc_multi_gpu', help='Experiment name')
     parser.add_argument('--bootstrap_num', type=int, default=5, help='Number of bootstrap iterations')
+    parser.add_argument('--num_epochs', type=int, default=10, help='Number of bootstrap iterations')
     args = parser.parse_args()
     main(args)
