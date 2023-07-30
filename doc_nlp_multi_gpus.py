@@ -117,6 +117,8 @@ def main(args):
     imdb_dataset = load_dataset('imdb', split='train')
     amazon_dataset = load_dataset('amazon_polarity', split='train[:1%]')
 
+    print('Im loading the model')
+    
     # Load tokenizer and model
     tokenizer = DistilBertTokenizerFast.from_pretrained('distilbert-base-uncased')
     model = DistilBertForSequenceClassification.from_pretrained('distilbert-base-uncased', num_labels=2).to(device)
@@ -150,13 +152,14 @@ def main(args):
         sampled_indices = resample(np.arange(len(imdb_train_dataset)), replace=True)
         bootstrap_dataset = torch.utils.data.Subset(imdb_train_dataset, sampled_indices)
         model_copy = DistilBertForSequenceClassification.from_pretrained('distilbert-base-uncased', num_labels=2).to(device)
-        optimizer = AdamW(model_copy.parameters())
+        learning_rate = 2e-5
+        optimizer = AdamW(model_copy.parameters(), lr=learning_rate)
         train(model_copy, bootstrap_dataset, optimizer, device, num_epochs)
         bootstrap_models.append(model_copy)
 
-        # Save model
-        model_path = os.path.join(models_dir, f'model_bootstrap_{i}')
-        model_copy.save_pretrained(model_path)
+        # # Save model
+        # model_path = os.path.join(models_dir, f'model_bootstrap_{i}')
+        # model_copy.save_pretrained(model_path)
 
     # Calculate number of samples per class
     num_samples_per_class = min(len([i for i in range(len(imdb_test_dataset)) if imdb_test_dataset[i]['labels'].item() == 0]),
