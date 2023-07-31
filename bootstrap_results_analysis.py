@@ -2,62 +2,67 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import argparse
 import os
+import matplotlib.cm as cm
+import numpy as np
+import seaborn as sns
+
 
 
 def main(args):
     
     results_dir = os.path.join(args.exp_path, 'results')
-    results_df_path = os.path.join(results_dir, 'bootstrap_results.csv')
+    results_df_path = os.path.join(results_dir, 'diff_summary_stats.csv')
     
     # Get the results df
     results = pd.read_csv(results_df_path, index_col=False)
     
-    # Calculate the differences for all metrics
-    difference_metrics = results.copy()
+    # Drop the unnecessary columns
+    results = results.drop(columns=['iteration', 'first_moment_difference'])
+    results = results.rename(columns={'Unnamed: 0': 'metrics'})
 
-    for metric in ['accuracy', 'auroc', 'f1', 'precision', 'recall', 'avg_confidence', 'entropy', 'first_moment', 'second_moment', 'third_moment', 'fourth_moment']:
-        difference_metrics[f'{metric}_difference'] = difference_metrics[f'id_{metric}'] - difference_metrics[f'ood_{metric}']
+    # Assuming results is your DataFrame
+    mean_results = results[results['metrics'] == 'mean']  # Filter to only include 'mean' row
+    mean_results = mean_results.drop(['metrics'], axis=1)  # Remove specified columns
+    # diff_stats_cols = mean_results.columns.to_list() 
+    diff_stats_names = ['Accuracy', 'AUROC', 'F1', 'precision', 'recall', 'DoC', 'DoE', '2nd_mom', '3rd_mom', '4th_mom']
+    # Transpose the DataFrame so that the column names become the index
+    mean_results = mean_results.transpose()
 
-    # Select only the difference metrics
-    difference_metrics = difference_metrics[[col for col in difference_metrics.columns if 'difference' in col]]
+    colors = cm.rainbow(np.linspace(0, 1, len(diff_stats_names)))  # Generate a rainbow color palette
 
-    # Plot histograms for each difference metric
-    fig, axs = plt.subplots(3, 4, figsize=(10, len(difference_metrics.columns)*5))
-
-    for ax, column in zip(axs.flatten(), difference_metrics.columns):
-        ax.hist(difference_metrics[column], bins=30, alpha=0.5, label=column)
-        ax.set_xlabel('Difference')
-        ax.set_ylabel('Frequency')
-        ax.set_title(f'Histogram of {column}')
-        ax.legend()
-        plt.savefig(os.path.join(results_dir, f'{column}_histogram.png'))
-    
+    # Plot the bar chart
+    fig, ax = plt.subplots(figsize=(14, 10))
+    #mean_results.plot(kind='bar', legend=True, color=plt.cm.gist_rainbow(np.linspace(0, 1, len(mean_results))))
+    ax.bar(diff_stats_names, mean_results[1].values, color=colors, width=0.9)
+    plt.title('Mean of metrics differences')  # Set the title
+    # plt.xlabel('Metrics')  # Set x-axis label
+    plt.xticks(rotation='vertical')  # Make x-axis labels vertical
+    plt.ylabel('Values')  # Set y-axis label
+    # plt.grid(False)  # Remove grid
     plt.tight_layout()
-    plt.savefig(os.path.join(results_dir, f'all_histograms.png'))
-
-    # # Create a DataFrame for differences
-    # results_diff = pd.DataFrame()
-
-    # # Calculate differences for each measure
-    # for measure in ['accuracy', 'auroc', 'f1', 'precision', 'recall', 'avg_confidence', 'entropy', 'first_moment', 'second_moment', 'third_moment', 'fourth_moment']:
-    #     results_diff[measure] = results[f'id_{measure}'] - results[f'ood_{measure}']
-
-    # # Calculate the mean and standard deviation of each difference
-    # mean_std_diff = results_diff.agg(['mean', 'std']).transpose()
-
-    # Calculate the mean and standard deviation of each difference
-    mean_std_diff = difference_metrics.agg(['mean', 'std']).transpose()
-    
-
-    mean_std_diff.to_csv(os.path.join(results_dir, 'diff_summary_mean_std.csv'), index=False)
+    plt.savefig(os.path.join(results_dir, 'mean_bar_plot.png'))
 
 
+    std_results = results[results['metrics'] == 'std']  # Filter to only include 'mean' row
+    std_results = std_results.drop(['metrics'], axis=1)  # Remove specified columns
+    # Transpose the DataFrame so that the column names become the index
+    std_results = std_results.transpose()
+
+    # Plot the bar chart
+    fig, ax = plt.subplots(figsize=(14, 10))
+    #mean_results.plot(kind='bar', legend=True, color=plt.cm.gist_rainbow(np.linspace(0, 1, len(mean_results))))
+    ax.bar(diff_stats_names, std_results[2].values, color=colors, width=0.9)
+    plt.title('Standard deviation of metrics differences')  # Set the title
+    # plt.xlabel('Metrics')  # Set x-axis label
+    plt.xticks(rotation='vertical')  # Make x-axis labels vertical
+    plt.ylabel('Values')  # Set y-axis label
+    # plt.grid(False)  # Remove grid
+    plt.tight_layout()
+    plt.savefig(os.path.join(results_dir, 'standard_deviation_bar_plot.png'))
+ 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--exp_path', type=str, default='/home/lamitay/experiments/tabular_bootstrap_29-07-2023_17-04-07', help='Experiment name')
-    # parser.add_argument('--dataset_path', type=str, default='/home/lamitay/datasets/UCI_adult_income_dataset/adult.data', help='Tabular data path')
-    # parser.add_argument('--bootstrap_num', type=int, default=5, help='Number of bootstrap iterations')
-    # parser.add_argument('--num_epochs', type=int, default=10, help='Number of bootstrap iterations')
+    parser.add_argument('--exp_path', type=str, default='/home/lamitay/experiments/UCI_adult_income_bootstrap_30-07-2023_14-49-05/', help='Experiment name')
     args = parser.parse_args()
     main(args)
