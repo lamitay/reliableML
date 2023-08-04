@@ -1,0 +1,8 @@
+data_name is: imagenet, data masks of: imagenet-r and val_dir is: /datasets/ImageNet/val/
+Processing predict_imagenet_labels-imagenet-r_resnet50_01-08-2023_00-43-11:   0%|          | 0/391 [00:00<?, ?it/s]Processing predict_imagenet_labels-imagenet-r_resnet50_01-08-2023_00-43-11:   0%|          | 0/391 [00:04<?, ?it/s]
+Traceback (most recent call last):
+  File "/home/lamitay/vscode_projects/reliableML/run_imagenet_ood_classes.py", line 246, in <module>
+    main()
+  File "/home/lamitay/vscode_projects/reliableML/run_imagenet_ood_classes.py", line 138, in main
+    output[~mask_tensor] = float('-inf')
+IndexError: The shape of the mask [1000] at index 0 does not match the shape of the indexed tensor [128, 1000] at index 0

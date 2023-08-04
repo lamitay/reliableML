@@ -16,6 +16,31 @@ import matplotlib.cm as cm
 
 
 def main(args):
+    
+    """
+    The main function for the script. It performs the following steps:
+    
+    1. Sets up the experiment directory based on the current time and provided base directory.
+    2. Loads the dataset from the provided path and preprocesses it (drops missing values, applies one-hot encoding to categorical variables, normalizes numerical variables, and label encodes the target variable).
+    3. Splits the data into in-distribution (ID) and out-of-distribution (OOD) sets based on the 'native-country' feature.
+    4. Initializes a RandomForestClassifier and a DataFrame to store the results.
+    5. Performs 100 bootstrap iterations, where for each iteration it resamples the training data, fits the classifier to the resampled data, makes predictions on the ID and OOD test sets, calculates various metrics (accuracy, AUROC, F1 score, precision, recall, average confidence, entropy, and moments), and adds these metrics to the results DataFrame.
+    6. Calculates the difference of confidences (DoC), difference of entropies (DoE), difference of accuracies (DoAcc), and differences of moments for each bootstrap iteration and adds these to the results DataFrame.
+    7. Saves the results to a CSV file.
+    8. Calculates the differences for all metrics and saves these as a separate CSV file.
+    9. Plots histograms and line plots for each difference metric and saves these plots as PNG files.
+    10. Plots the DoC, DoE, DoAcc, and differences of moments across bootstrap iterations and saves this plot as a PNG file.
+    11. Plots histograms of DoC and DoE values and saves these plots as PNG files.
+    12. Plots the mean and standard deviation of the difference metrics and saves these plots as PNG files.
+
+    Parameters:
+    args (argparse.Namespace): The command-line arguments. It should have the following attributes:
+        - base_exp_dir (str): The base directory for the experiment.
+        - exp_name (str): The name of the experiment.
+        - dataset_path (str): The path to the dataset.
+        - bootstrap_num (int): The number of bootstrap iterations to perform.
+    """
+
     base_exp_dir = args.base_exp_dir
     exp_name = args.exp_name
     data_path = args.dataset_path
@@ -252,7 +277,7 @@ def main(args):
     results = results.drop(columns=['iteration', 'first_moment_difference'])
     results = results.reset_index().rename(columns={'index': 'metrics'})
 
-    # Assuming results is your DataFrame
+    # Filter the results to get only the mean coloumns, prepare for plotting
     mean_results = results[results['metrics'] == 'mean']  # Filter to only include 'mean' row
     mean_results = mean_results.drop(['metrics'], axis=1)  # Remove specified columns
     # diff_stats_cols = mean_results.columns.to_list() 
@@ -265,16 +290,17 @@ def main(args):
     # Plot the bar chart
     fig, ax = plt.subplots(figsize=(14, 10))
     #mean_results.plot(kind='bar', legend=True, color=plt.cm.gist_rainbow(np.linspace(0, 1, len(mean_results))))
-    ax.bar(diff_stats_names, mean_results[1].values, color=colors, width=0.9)
+    ax.bar(diff_stats_names, mean_results[1].values, color=colors, width=0.8)
     plt.title('Mean of metrics differences')  # Set the title
     # plt.xlabel('Metrics')  # Set x-axis label
-    plt.xticks(rotation='vertical')  # Make x-axis labels vertical
+    plt.xticks(rotation='vertical', fontsize=14)  # Make x-axis labels vertical
     plt.ylabel('Values')  # Set y-axis label
     # plt.grid(True)  # Remove grid
     plt.tight_layout()
     plt.savefig(os.path.join(results_dir, 'mean_bar_plot.png'))
 
 
+    # Filter the results to get only the STD coloumns, prepare for plotting
     std_results = results[results['metrics'] == 'std']  # Filter to only include 'mean' row
     std_results = std_results.drop(['metrics'], axis=1)  # Remove specified columns
     # Transpose the DataFrame so that the column names become the index
@@ -283,11 +309,11 @@ def main(args):
     # Plot the bar chart
     fig, ax = plt.subplots(figsize=(14, 10))
     #mean_results.plot(kind='bar', legend=True, color=plt.cm.gist_rainbow(np.linspace(0, 1, len(mean_results))))
-    ax.bar(diff_stats_names, std_results[2].values, color=colors, width=0.9)
-    plt.title('Standard deviation of metrics differences')  # Set the title
+    ax.bar(diff_stats_names, std_results[2].values, color=colors, width=0.7)
+    plt.title('Standard deviation of metrics differences', fontsize=14)  # Set the title
     # plt.xlabel('Metrics')  # Set x-axis label
-    plt.xticks(rotation='vertical')  # Make x-axis labels vertical
-    plt.ylabel('Values')  # Set y-axis label
+    plt.xticks(rotation='vertical', fontsize=14)  # Make x-axis labels vertical
+    plt.ylabel('Values', fontsize=14)  # Set y-axis label
     # plt.grid(False)  # Remove grid
     plt.tight_layout()
     plt.savefig(os.path.join(results_dir, 'standard_deviation_bar_plot.png'))
