@@ -16,6 +16,15 @@ import plotly.express as px
 import matplotlib.pyplot as plt
 import plotly.io as pio
 
+#
+#
+#
+# note: eventually we dropped the idea of trying to use the embeddings for the creation of predictive parameters
+#
+#
+#
+#
+
 
 def load_imagenet_labels():
     """

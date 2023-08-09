@@ -1,0 +1,4 @@
+  File "/home/davidva/vscode_projects/reliableML/to_be_deleted.py", line 63
+    val_dir = '/home/davidva/datasets/' + data_name + '/3/
+                                                          ^
+SyntaxError: EOL while scanning string literal
